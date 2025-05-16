@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.flutter_smarthome"
+    namespace = "com.jiyoujiaju.jijiahui"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.0.12077973"
 
@@ -37,8 +37,26 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
     }
+
+
 }
 
 flutter {
     source = "../.."
+}
+dependencies {
+    // Flutter 核心依赖 (通常已存在)
+    // implementation(project(":flutter")) // 如果你的 flutter.gradlePlugin.version < 4.2
+    // implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version" // 或者类似的版本
+
+    // 在这里添加 Gson 依赖
+    implementation("com.google.code.gson:gson:2.10.1")
+
+    // 其他你可能已经添加的依赖项
+    // 例如：
+    // implementation 'androidx.core:core-ktx:1.9.0'
+    // implementation 'androidx.appcompat:appcompat:1.6.1'
+    // testImplementation 'junit:junit:4.13.2'
+    // androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    // androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 }

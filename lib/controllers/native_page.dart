@@ -32,7 +32,7 @@ class _NativePageWidgetState extends State<NativePageWidget> {
 
   @override
   void dispose() {
-    _subscription?.cancel();  // 取消订阅
+    _subscription?.cancel();  // 取消订阅·
     super.dispose();
   }
 
