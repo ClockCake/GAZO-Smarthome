@@ -42,7 +42,7 @@ class _ActivityDetailWidgetState extends State<ActivityDetailWidget> {
   @override
   void initState() {
     super.initState();
-
+ 
     // 初始化WebView控制器 (与之前的代码相同)
     _webViewController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)

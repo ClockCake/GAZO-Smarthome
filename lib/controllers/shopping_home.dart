@@ -6,9 +6,9 @@ import 'package:flutter_smarthome/controllers/shopping_category_list.dart';
 import 'package:flutter_smarthome/network/api_manager.dart';
 import 'package:flutter_smarthome/utils/custom_navbar.dart';
 import 'package:flutter_smarthome/controllers/shopping_home_list.dart';
-import 'package:flutter_smarthome/controllers/shopping_category_list.dart';
 import 'package:flutter_smarthome/utils/network_state_helper.dart';
 
+/// 方案二：NestedScrollView + SliverPersistentHeader 修复 TabBarView 与 ListView 手势冲突
 class ShoppingHomeWidget extends StatefulWidget {
   const ShoppingHomeWidget({Key? key}) : super(key: key);
 
@@ -18,43 +18,23 @@ class ShoppingHomeWidget extends StatefulWidget {
 
 class _ShoppingHomeWidgetState extends State<ShoppingHomeWidget>
     with SingleTickerProviderStateMixin {
-
-  List<String> _categoryNameList = []; // 品类名
-  List<String> _categoryIds = []; // 品类id
+  List<String> _categoryNameList = [];
+  List<String> _categoryIds = [];
   late TabController _tabController;
-  bool _isInitialLoad = true;
 
   @override
   void initState() {
     super.initState();
-      _initNetworkListener();  // ← 调用网络状态监听
-    _loadInitialData();
-
+    _initNetworkListener();
+    _getCategory();
   }
 
   void _initNetworkListener() {
-   NetworkStateHelper.initNetworkListener(() {
+    NetworkStateHelper.initNetworkListener(() {
       if (mounted) {
-        // 网络从无到有时自动下拉刷新
         _getCategory();
       }
     });
-  }
-
-  Future<void> _loadInitialData() async {
-    try {
-      await Future.wait([
-        _getCategory(),
-        // 其他需要初始化的数据加载
-      ]);
-    } catch (e) {
-      // 处理错误情况
-    } finally {
-      // 初始加载完成后，设置标志位为false
-      setState(() {
-        _isInitialLoad = false;
-      });
-    }
   }
 
   void _initTabController() {
@@ -62,11 +42,7 @@ class _ShoppingHomeWidgetState extends State<ShoppingHomeWidget>
       length: _categoryNameList.length,
       vsync: this,
     );
-
-    // 添加监听器
-    _tabController.addListener(() {
-      setState(() {}); // 当 Tab 切换时，重建以更新字体样式
-    });
+    _tabController.addListener(() => setState(() {}));
   }
 
   @override
@@ -79,109 +55,115 @@ class _ShoppingHomeWidgetState extends State<ShoppingHomeWidget>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CustomNavigationBar(
-        title: "极家Life",
+        title: '极家Life',
         onSearchTap: () {
-          // 处理搜索按钮点击
-          Navigator.push(context, MaterialPageRoute(builder: (context) => HomeSearchPage(type: 2)));
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const HomeSearchPage(type: 2)),
+          );
         },
         onCartTap: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => ShoppingCarListWidget()));
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ShoppingCarListWidget()),
+          );
         },
       ),
       body: SafeArea(
         child: _categoryNameList.isEmpty
             ? const Center(child: CircularProgressIndicator())
-            : Column(
-                children: [
-                  Container(
-                    height: 44.h,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+            : NestedScrollView(
+                headerSliverBuilder: (context, innerBoxIsScrolled) {
+                  return [
+                    SliverPersistentHeader(
+                      pinned: true,
+                      delegate: _TabBarSliverDelegate(_buildTabBar()),
                     ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: LayoutBuilder(
-                            builder: (context, constraints) {
-                              int tabCount = _categoryNameList.length;
-                              bool isScrollable = tabCount > 4;
-                              double totalWidth = constraints.maxWidth;
-                              double tabWidth = totalWidth /
-                                  (isScrollable ? 4 : tabCount);
-                              return TabBar(
-                                controller: _tabController,
-                                isScrollable: isScrollable,
-                                dividerHeight: 0,
-                                labelPadding: EdgeInsets.zero,
-                                tabs: List.generate(_categoryNameList.length,
-                                    (index) {
-                                  String title = _categoryNameList[index];
-                                  bool isSelected =
-                                      _tabController.index == index;
-                                  return SizedBox(
-                                    width: tabWidth,
-                                    child: Tab(
-                                      child: Center(
-                                        child: Text(
-                                          title,
-                                          style: TextStyle(
-                                            fontWeight: isSelected
-                                                ? FontWeight.bold
-                                                : FontWeight.normal,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                }),
-                                labelColor: Colors.black,
-                                unselectedLabelColor: Colors.grey,
-                                indicator: UnderlineTabIndicator(
-                                  borderSide: const BorderSide(
-                                    width: 3,
-                                    color: Colors.orange,
-                                  ),
-                                  insets: EdgeInsets.symmetric(
-                                    horizontal: (tabWidth - 24) / 2,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                        Container(
-                          padding: EdgeInsets.symmetric(horizontal: 12.w),
-                          child: InkWell(
-                            onTap: () {                    
-                              Navigator.push(context, MaterialPageRoute(builder: (context) => ShoppingCategoryListWidget()));
-                            },
-                            child: Image.asset(
-                              'assets/images/icon_shopping_more.png',
-                              width: 24.w,
-                              height: 24.h,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: TabBarView(
-                      controller: _tabController,
-                      children: _categoryIds
-                          .map((id) => ShoppingHomeListWidget(categoryId: id))
-                          .toList(),
-                    ),
-                  ),
-                ],
+                  ];
+                },
+                body: TabBarView(
+                  controller: _tabController,
+                  children: _categoryIds
+                      .map((id) => ShoppingHomeListWidget(categoryId: id))
+                      .toList(),
+                ),
               ),
+      ),
+    );
+  }
+
+  /// 将 TabBar 容器包在 PreferredSize 中返回，满足 SliverPersistentHeader 要求
+  PreferredSize _buildTabBar() {
+    final bool isScrollable = _categoryNameList.length > 4;
+
+    return PreferredSize(
+      preferredSize: Size.fromHeight(44.h),
+      child: Container(
+        height: 44.h,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: TabBar(
+                controller: _tabController,
+                isScrollable: isScrollable,
+                dividerHeight: 0,
+                labelPadding: EdgeInsets.zero,
+                tabs: _categoryNameList.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final title = entry.value;
+                  final isSelected = index == _tabController.index;
+                  final isFirst = index == 0;
+                  
+                  return Tab(
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isFirst ? 0.w : 16.w,
+                      ),
+                      child: Center(
+                        child: Text(
+                          title,
+                          style: TextStyle(
+                            fontWeight:
+                                isSelected ? FontWeight.bold : FontWeight.normal,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+                labelColor: Colors.black,
+                unselectedLabelColor: Colors.grey,
+                indicatorColor: Colors.orange,
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12.w),
+              child: InkWell(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const ShoppingCategoryListWidget(),
+                  ),
+                ),
+                child: Image.asset(
+                  'assets/images/icon_shopping_more.png',
+                  width: 24.w,
+                  height: 24.h,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -193,26 +175,42 @@ class _ShoppingHomeWidgetState extends State<ShoppingHomeWidget>
 
       if (response != null && mounted) {
         final List<dynamic> data = response as List<dynamic>;
-
         if (data.isNotEmpty) {
           setState(() {
             _categoryNameList =
-                data.map((item) => item['categoryName'] as String).toList();
+                data.map((e) => e['categoryName'] as String).toList();
             _categoryIds =
-                data.map((item) => item['categoryId'].toString()).toList();
+                data.map((e) => e['categoryId'].toString()).toList();
+            _initTabController();
           });
-          _initTabController(); // 初始化 TabController
         }
       }
     } catch (e) {
-      print('获取分类数据错误: $e');
-      // 可以添加错误提示
-      // if (mounted) {
-      //   ScaffoldMessenger.of(context).showSnackBar(
-      //     const SnackBar(content: Text('获取分类数据失败，请稍后重试')),
-      //   );
-      // }
+      debugPrint('获取分类数据错误: $e');
     }
   }
- 
+}
+
+/// SliverPersistentHeaderDelegate 实现，使用 PreferredSizeWidget
+class _TabBarSliverDelegate extends SliverPersistentHeaderDelegate {
+  final PreferredSizeWidget tabBar;
+
+  _TabBarSliverDelegate(this.tabBar);
+
+  @override
+  double get minExtent => tabBar.preferredSize.height;
+
+  @override
+  double get maxExtent => tabBar.preferredSize.height;
+
+  @override
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Material(color: Colors.white, child: tabBar);
+  }
+
+  @override
+  bool shouldRebuild(covariant _TabBarSliverDelegate oldDelegate) {
+    return false;
+  }
 }

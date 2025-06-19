@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--   涂鸦sdk     -->
+    <bool name="is_scene_support">true</bool>
+    <bool name="is_hw_pkg">false</bool>
+    <bool name="is_huawei_pkg">false</bool>
+</resources>

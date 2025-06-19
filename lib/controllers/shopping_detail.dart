@@ -265,16 +265,16 @@ class _ShoppingDetailPageWidgetState extends State<ShoppingDetailPageWidget> {
                          child: Row(
                            children: [
                               // 商家Logo (如果需要显示)
-                             _shoppingDetail?['businessLogo'] != null ?
-                             Padding(
-                               padding: EdgeInsets.only(right: 4.w),
-                               child: NetworkImageHelper().getCachedNetworkImage(
-                                  imageUrl: _shoppingDetail!['businessLogo'], // 确认非空后访问
-                                  width: 18.w,
-                                  height: 18.h,
-                                  // 可以添加占位图或错误图
-                               ),
-                             ) : SizedBox.shrink(), // 如果Logo URL为空则不显示
+                            //  _shoppingDetail?['businessLogo'] != null ?
+                            //  Padding(
+                            //    padding: EdgeInsets.only(right: 4.w),
+                            //    child: NetworkImageHelper().getCachedNetworkImage(
+                            //       imageUrl: _shoppingDetail!['businessLogo'], // 确认非空后访问
+                            //       width: 18.w,
+                            //       height: 18.h,
+                            //       // 可以添加占位图或错误图
+                            //    ),
+                            //  ) : SizedBox.shrink(), // 如果Logo URL为空则不显示
                              // 商家名称
                              Expanded( // 允许商家名称换行或省略
                                child: Text(
@@ -438,10 +438,10 @@ class _ShoppingDetailPageWidgetState extends State<ShoppingDetailPageWidget> {
              ),
              // 限制最大高度，并允许内容滚动
              constraints: BoxConstraints(
-                maxHeight: MediaQuery.of(modalContext).size.height * 0.8, // 限制最大高度为屏幕80%
+                maxHeight: MediaQuery.of(modalContext).size.height * 0.95, 
              ),
              // 使用 MediaQuery 获取安全区域 padding
-             padding: EdgeInsets.only(bottom: MediaQuery.of(modalContext).viewInsets.bottom), // 处理键盘弹出
+            //  padding: EdgeInsets.only(bottom: MediaQuery.of(modalContext).viewInsets.bottom), // 处理键盘弹出
              child: LoginPage(onLoginSuccess: () {
                // 登录成功回调
                Navigator.pop(modalContext); // 关闭登录弹窗
